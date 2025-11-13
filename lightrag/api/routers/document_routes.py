@@ -1581,11 +1581,28 @@ async def background_delete_documents(
     """Background task to delete multiple documents"""
     from lightrag.kg.shared_storage import (
         get_namespace_data,
-        get_pipeline_status_lock,
+        get_storage_keyed_lock,
+        initialize_pipeline_status,
     )
 
-    pipeline_status = await get_namespace_data("pipeline_status")
-    pipeline_status_lock = get_pipeline_status_lock()
+    # Step 1: Get workspace
+    workspace = rag.workspace
+
+    # Step 2: Construct namespace
+    namespace = f"{workspace}:pipeline" if workspace else "pipeline_status"
+
+    # Step 3: Ensure initialization
+    await initialize_pipeline_status(workspace)
+
+    # Step 4: Get lock
+    pipeline_status_lock = get_storage_keyed_lock(
+        keys="status",
+        namespace=namespace,
+        enable_logging=False
+    )
+
+    # Step 5: Get data
+    pipeline_status = await get_namespace_data(namespace)
 
     total_docs = len(doc_ids)
     successful_deletions = []
@@ -2074,12 +2091,29 @@ def create_document_routes(
         """
         from lightrag.kg.shared_storage import (
             get_namespace_data,
-            get_pipeline_status_lock,
+            get_storage_keyed_lock,
+            initialize_pipeline_status,
         )
 
         # Get pipeline status and lock
-        pipeline_status = await get_namespace_data("pipeline_status")
-        pipeline_status_lock = get_pipeline_status_lock()
+        # Step 1: Get workspace
+        workspace = rag.workspace
+
+        # Step 2: Construct namespace
+        namespace = f"{workspace}:pipeline" if workspace else "pipeline_status"
+
+        # Step 3: Ensure initialization
+        await initialize_pipeline_status(workspace)
+
+        # Step 4: Get lock
+        pipeline_status_lock = get_storage_keyed_lock(
+            keys="status",
+            namespace=namespace,
+            enable_logging=False
+        )
+
+        # Step 5: Get data
+        pipeline_status = await get_namespace_data(namespace)
 
         # Check and set status with lock
         async with pipeline_status_lock:
@@ -2884,11 +2918,28 @@ def create_document_routes(
         try:
             from lightrag.kg.shared_storage import (
                 get_namespace_data,
-                get_pipeline_status_lock,
+                get_storage_keyed_lock,
+                initialize_pipeline_status,
             )
 
-            pipeline_status = await get_namespace_data("pipeline_status")
-            pipeline_status_lock = get_pipeline_status_lock()
+            # Step 1: Get workspace
+            workspace = rag.workspace
+
+            # Step 2: Construct namespace
+            namespace = f"{workspace}:pipeline" if workspace else "pipeline_status"
+
+            # Step 3: Ensure initialization
+            await initialize_pipeline_status(workspace)
+
+            # Step 4: Get lock
+            pipeline_status_lock = get_storage_keyed_lock(
+                keys="status",
+                namespace=namespace,
+                enable_logging=False
+            )
+
+            # Step 5: Get data
+            pipeline_status = await get_namespace_data(namespace)
 
             async with pipeline_status_lock:
                 if not pipeline_status.get("busy", False):
